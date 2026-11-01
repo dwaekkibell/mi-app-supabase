@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registro y Autenticación con Supabase</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body { font-family: sans-serif; padding: 20px; max-width: 400px; margin: 0 auto; }
+    section { margin-bottom: 25px; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+    form { display: flex; flex-direction: column; gap: 10px; }
+    input, button { padding: 8px; font-size: 14px; }
+    .btn-reg { background-color: #24b47e; color: white; border: none; cursor: pointer; }
+    .btn-log { background-color: #3f51b5; color: white; border: none; cursor: pointer; }
+  </style>
+</head>
+<body>
+
+  <h2>Autenticación y Registro</h2>
+
+  <!-- Sección de Autenticación -->
+  <section>
+    <h3>1. Cuenta de Usuario</h3>
+    <form id="authForm">
+      <input type="email" id="email" placeholder="Correo electrónico" required>
+      <input type="password" id="password" placeholder="Contraseña" required>
+      <button type="button" id="btnRegister" class="btn-reg">Registrarse</button>
+      <button type="button" id="btnLogin" class="btn-log">Iniciar Sesión</button>
+    </form>
+    <p id="authMensaje"></p>
+  </section>
+
+  <!-- Sección de Estudiantes (Protegida/Interactiva) -->
+  <section>
+    <h3>2. Agregar Estudiante</h3>
+    <form id="formulario">
+      <input type="text" id="nombre" placeholder="Nombre completo" required>
+      <input type="text" id="carrera" placeholder="Carrera" required>
+      <button type="submit" class="btn-reg">Guardar en Supabase</button>
+    </form>
+    <p id="mensaje"></p>
+  </section>
+
+  <script>
+    const supabaseUrl = 'https://ysttkunvkaoxjxcwzaxq.supabase.co'
+    const supabaseKey = 'sb_publishable_9Lb8IaWX2k07sQS-JZ1LPg_-F5mlK40'
+    const miCliente = window.supabase.createClient(supabaseUrl, supabaseKey)
+
+    const authMensaje = document.getElementById('authMensaje')
+    
+    // Registrar usuario
+    document.getElementById('btnRegister').addEventListener('click', async () => {
+      const email = document.getElementById('email').value
+      const password = document.getElementById('password').value
+
+      const { data, error } = await miCliente.auth.signUp({ email, password })
+
+      if (error) {
+        authMensaje.innerText = 'Error al registrar: ' + error.message
+        authMensaje.style.color = 'red'
+      } else {
+        authMensaje.innerText = '¡Registro exitoso! Revisa tu correo o inicia sesión.'
+        authMensaje.style.color = 'green'
+      }
+    })
+
+    // Iniciar sesión
+    document.getElementById('btnLogin').addEventListener('click', async () => {
+      const email = document.getElementById('email').value
+      const password = document.getElementById('password').value
+
+      const { data, error } = await miCliente.auth.signInWithPassword({ email, password })
+
+      if (error) {
+        authMensaje.innerText = 'Error al entrar: ' + error.message
+        authMensaje.style.color = 'red'
+      } else {
+        authMensaje.innerText = '¡Sesión iniciada correctamente!'
+        authMensaje.style.color = 'blue'
+      }
+    })
+
+    // Registro de estudiantes (el que ya tenías funcionando)
+    const form = document.getElementById('formulario')
+    const mensaje = document.getElementById('mensaje')
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault()
+      const nombre = document.getElementById('nombre').value
+      const carrera = document.getElementById('carrera').value
+
+      const { data, error } = await miCliente
+        .from('estudiantes')
+        .insert([{ nombre, carrera }])
+
+      if (error) {
+        mensaje.innerText = 'Error al guardar: ' + error.message
+        mensaje.style.color = 'red'
+      } else {
+        mensaje.innerText = '¡Estudiante registrado con éxito!'
+        mensaje.style.color = 'green'
+        form.reset()
+      }
+    })
+  </script>
+</body>
+</html>
